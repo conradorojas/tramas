@@ -1,0 +1,821 @@
+app.controller('ControladorCapituloLIntegrante', function ($scope, $rootScope, $location, $timeout, $http, DatabaseSvr, UtilidadesSvr, DataEncuestaSvr, PreguntaSvr) {
+    $rootScope.CapituloActual = 'CapituloL';
+
+    $scope.VersionAPP = config.tipoAPP == 'APP';
+    $scope.VersionWEB = config.tipoAPP == 'WEB';
+
+    $scope.idHogar = $rootScope.idHogarSeleccionado;
+    $scope.numeroDocumentoIntegranteSeleccionado = $rootScope.idIntegranteHogarSeleccionado;
+
+    
+    $scope.Integrante = [];
+    $scope.capituloK = {
+        K01: '',
+        K14:'',
+    };
+    $scope.capituloA = {
+        IdZona: '',
+    }
+
+    $scope.capituloL = [];
+
+    $scope.capituloE = [];
+
+    $scope.capituloL = {
+        IdHogar: '',
+        IdIntegranteHogar: '',
+        idCapituloL: '',
+        idEncuesta: '',
+        finalizacionEncuesta: '',
+        L01: '',
+        L02_1: '',
+        L02_1A: '',
+        L02_2: '',
+        L02_2A: '',
+        L02_3: '',
+        L02_3A: '',
+        L03: '',
+        L04_1: '',
+        L04_1A: '',
+        L04_2: '',
+        L04_2A: '',
+        L04_3: '',
+        L04_3A: '',
+        L04_4: '',
+        L04_4A: '',
+        L04_5: '',
+        L04_5A: '',
+        L04_6: '',
+        L04_6A: '',
+        L05_1: '',
+        L05_1A: '',
+        L05_2: '',
+        L05_2A: '',
+        L05_3: '',
+        L05_4: '',
+        L05_5: '',
+        fechaRegistro: '',
+        idEstado: '',
+        idHogarIntegrante: '',
+        idResponsable: '',
+
+
+    }
+
+    $scope.listaOpcionesL1 = [];
+    $scope.malla = {
+        L01: true,
+        L02_1: true,
+        L02_1A: true,
+        L02_2: true,
+        L02_2A: true,
+        L02_3: true,
+        L02_3A: true,
+        L03: true,
+        L04_1: true,
+        L04_1A: true,
+        L04_2: true,
+        L04_2A: true,
+        L04_3: true,
+        L04_3A: true,
+        L04_4: true,
+        L04_4A: true,
+        L04_5: true,
+        L04_5A: true,
+        L04_6: true,
+        L04_6A: true,
+        L05_1: true,
+        L05_1A: true,
+        L05_2: true,
+        L05_2A: true,
+        L05_3: true,
+        L05_4: true,
+        L05_5: true
+
+    }
+
+    $scope.InicializarForm = function () {
+
+
+    }
+
+    $scope.Inicializar = function () {
+        $timeout(function () {
+            $scope.$apply(function () {
+                traerData();
+            });
+        });
+    }
+
+    function traerData() {
+        PreguntaSvr.ObtenerOpcionesCapitulo('L').then(function (data) {
+            $scope.listaOpciones = data;
+
+            TraerDatosCapitulo();
+        });
+    }
+
+    function TraerDatosCapitulo() {
+
+        DatabaseSvr.ObtenerResultadoSQL('SELECT * FROM TLNEGUBICACIONHOGAR WHERE IdHogar=? ', [$scope.idHogar]).then(function (value) {
+
+            $scope.capituloA = value.rows[0];
+
+        });
+
+        $scope.listaOpcionesL1 = [];
+        DatabaseSvr.ObtenerResultadoSQL('SELECT * FROM TLNEGINTEGRANTEHOGAR WHERE IdHogar=? AND IdIntegranteHogar=?', [$scope.idHogar, $scope.numeroDocumentoIntegranteSeleccionado]).then(function (value) {
+            $scope.Integrante = value.rows[0];
+            console.log($scope.Integrante);
+            //if ($scope.Integrante.NumeroDocumento != '') {
+                $scope.idIntegranteHogarSeleccionado = value.rows[0].IdIntegranteHogar;
+                $scope.Integrante.Edad = parseInt(value.rows[0].Edad);
+                $scope.idIntegranteHogar = value.rows[0].IdIntegranteHogar;
+                $rootScope.nombreintegrante = value.rows[0].NombreCompleto;
+            //}
+
+        });
+        DatabaseSvr.ObtenerResultadoSQL('SELECT * FROM TLCARENCUESTA WHERE IdHogar=? ', [$scope.idHogar]).then(function (value) {
+
+            $scope.Encuesta = value.rows[0];
+
+        });
+
+        DatabaseSvr.ObtenerResultadoSQL('SELECT * FROM TLCARCAPITULOE WHERE IdHogar=? AND IdIntegranteHogar=? ', [$scope.idHogar, $scope.numeroDocumentoIntegranteSeleccionado]).then(function (value) {
+
+            $scope.capituloE.E11 = value.rows[0].E11;
+            $scope.capituloE.E14 = value.rows[0].E14;
+
+            if ($scope.capituloE.E11 != 'E14:1') {
+                $scope.capituloL.L05_1 = 'L05_1:99';
+                $scope.capituloL.L05_1A = 'L05_1A:99';
+                $scope.capituloL.L05_2 = 'L05_2:99';
+                $scope.capituloL.L05_2A = 'L05_2A:99';
+                $scope.capituloL.L05_3 = 'L05_3:99';
+                $scope.capituloL.L05_4 = 'L05_4:99';
+                $scope.capituloL.L05_5 = 'L05_5:99';
+            }
+        });
+
+
+        //DatabaseSvr.ObtenerResultadoSQL('SELECT * FROM TLCARCAPITULOK WHERE IdHogar=? AND IdIntegranteHogar=? ', [$scope.idHogar, $scope.numeroDocumentoIntegranteSeleccionado]).then(function (value) {
+
+        //    $scope.capituloK.K01 = value.rows[0].K01;
+        //    $scope.capituloK.K14 = value.rows[0].K14;
+        //    //$scope.capituloK.K14 = 'K14:3';
+        //    //$scope.capituloK.K01 = 'K01:1';
+        //});
+
+        DatabaseSvr.ObtenerResultadoSQL('SELECT * FROM TLCARCAPITULOL WHERE IdHogar=? AND IdIntegranteHogar=?', [$scope.idHogar, $scope.numeroDocumentoIntegranteSeleccionado]).then(function (value) {
+            var datosCapituloL = value.rows[0]; 
+            
+            if (datosCapituloL) {
+
+                $scope.capituloL.IdHogar = datosCapituloL.IdHogar;
+                $scope.capituloL.IdIntegranteHogar = datosCapituloL.IdIntegranteHogar;
+                $scope.capituloL.idCapituloL = datosCapituloL.idCapituloL;
+                $scope.capituloL.idEncuesta = datosCapituloL.idEncuesta;
+                $scope.capituloL.finalizacionEncuesta = datosCapituloL.finalizacionEncuesta;
+                $scope.capituloL.fechaRegistro = datosCapituloL.fechaRegistro;
+                $scope.capituloL.idEstado = datosCapituloL.idEncuesta;
+                $scope.capituloL.L01 = UtilidadesSvr.ValidarDato(datosCapituloL.L01);
+                $scope.capituloL.L02_1 = UtilidadesSvr.ValidarDato(datosCapituloL.L02_1);
+                $scope.capituloL.L02_1A = UtilidadesSvr.ValidarDato(datosCapituloL.L02_1A);
+                $scope.capituloL.L02_2 = UtilidadesSvr.ValidarDato(datosCapituloL.L02_2);
+                $scope.capituloL.L02_2A = UtilidadesSvr.ValidarDato(datosCapituloL.L02_2A);
+                $scope.capituloL.L02_3 = UtilidadesSvr.ValidarDato(datosCapituloL.L02_3);
+                $scope.capituloL.L02_3A = UtilidadesSvr.ValidarDato(datosCapituloL.L02_3A);
+                $scope.capituloL.L03 = UtilidadesSvr.ValidarDato(datosCapituloL.L03);
+                $scope.capituloL.L04_1 = UtilidadesSvr.ValidarDato(datosCapituloL.L04_1);
+                $scope.capituloL.L04_1A = UtilidadesSvr.ValidarDato(datosCapituloL.L04_1A);
+                $scope.capituloL.L04_2 = UtilidadesSvr.ValidarDato(datosCapituloL.L04_2);
+                $scope.capituloL.L04_2A = UtilidadesSvr.ValidarDato(datosCapituloL.L04_2A);
+                $scope.capituloL.L04_3 = UtilidadesSvr.ValidarDato(datosCapituloL.L04_3);
+                $scope.capituloL.L04_3A = UtilidadesSvr.ValidarDato(datosCapituloL.L04_3A);
+                $scope.capituloL.L04_4 = UtilidadesSvr.ValidarDato(datosCapituloL.L04_4);
+                $scope.capituloL.L04_4A = UtilidadesSvr.ValidarDato(datosCapituloL.L04_4A);
+                $scope.capituloL.L04_5 = UtilidadesSvr.ValidarDato(datosCapituloL.L04_5);
+                $scope.capituloL.L04_5A = UtilidadesSvr.ValidarDato(datosCapituloL.L04_5A);
+                $scope.capituloL.L04_6 = UtilidadesSvr.ValidarDato(datosCapituloL.L04_6);
+                $scope.capituloL.L04_6A = UtilidadesSvr.ValidarDato(datosCapituloL.L04_6A);
+                $scope.capituloL.L05_1 = UtilidadesSvr.ValidarDato(datosCapituloL.L05_1);
+                $scope.capituloL.L05_1A = UtilidadesSvr.ValidarDato(datosCapituloL.L05_1A);
+                $scope.capituloL.L05_2 = UtilidadesSvr.ValidarDato(datosCapituloL.L05_2);
+                $scope.capituloL.L05_2A = UtilidadesSvr.ValidarDato(datosCapituloL.L05_2A);
+                $scope.capituloL.L05_3 = UtilidadesSvr.ValidarDato(datosCapituloL.L05_3);
+                $scope.capituloL.L05_4 = UtilidadesSvr.ValidarDato(datosCapituloL.L05_4);
+                $scope.capituloL.L05_5 = UtilidadesSvr.ValidarDato(datosCapituloL.L05_5);
+                $scope.capituloL.fechaRegistro = datosCapituloL.fechaRegistro;
+                $scope.capituloL.idEstado = datosCapituloL.idEstado;
+                $scope.capituloL.idHogarIntegrante = datosCapituloL.idHogarIntegrante;
+                $scope.capituloL.idResponsable = datosCapituloL.idResponsable;
+
+                
+                $scope.ValidaRespuesta('L01');
+                $scope.ValidaRespuesta('L02_1');
+                $scope.ValidaRespuesta('L02_1A');
+                $scope.ValidaRespuesta('L02_2');
+                $scope.ValidaRespuesta('L02_2A');
+                $scope.ValidaRespuesta('L02_3');
+                $scope.ValidaRespuesta('L02_3A');
+                $scope.ValidaRespuesta('L03');
+                $scope.ValidaRespuesta('L04_1');
+                $scope.ValidaRespuesta('L04_1A');
+                $scope.ValidaRespuesta('L04_2');
+                $scope.ValidaRespuesta('L04_2A');
+                $scope.ValidaRespuesta('L04_3');
+                $scope.ValidaRespuesta('L04_3A');
+                $scope.ValidaRespuesta('L04_4');
+                $scope.ValidaRespuesta('L04_4A');
+                $scope.ValidaRespuesta('L04_5');
+                $scope.ValidaRespuesta('L04_5A');
+                $scope.ValidaRespuesta('L04_6');
+                $scope.ValidaRespuesta('L04_6A');
+                $scope.ValidaRespuesta('L05_1');
+                $scope.ValidaRespuesta('L05_1A');
+                $scope.ValidaRespuesta('L05_2');
+                $scope.ValidaRespuesta('L05_2A');
+                $scope.ValidaRespuesta('L05_3');
+                $scope.ValidaRespuesta('L05_4');
+                $scope.ValidaRespuesta('L05_5');
+                
+                $scope.ValidaNumero($scope.capituloL.L01);
+                $scope.ValidaNumero($scope.capituloL.L02_1);
+                $scope.ValidaNumero($scope.capituloL.L02_1A);
+                $scope.ValidaNumero($scope.capituloL.L02_2);
+                //$scope.ValidaNumero($scope.capituloL.L02_2A);
+                $scope.ValidaNumero($scope.capituloL.L02_3);
+                $scope.ValidaNumero($scope.capituloL.L02_3A);
+                $scope.ValidaNumero($scope.capituloL.L03);
+                $scope.ValidaNumero($scope.capituloL.L04_1);
+                $scope.ValidaNumero($scope.capituloL.L04_1A);
+                $scope.ValidaNumero($scope.capituloL.L04_2);
+                $scope.ValidaNumero($scope.capituloL.L04_2A);
+                $scope.ValidaNumero($scope.capituloL.L04_3);
+                $scope.ValidaNumero($scope.capituloL.L04_3A);
+                $scope.ValidaNumero($scope.capituloL.L04_4);
+                $scope.ValidaNumero($scope.capituloL.L04_4A);
+                $scope.ValidaNumero($scope.capituloL.L04_5);
+                $scope.ValidaNumero($scope.capituloL.L04_5A);
+                $scope.ValidaNumero($scope.capituloL.L04_6);
+                $scope.ValidaNumero($scope.capituloL.L04_6A);
+                $scope.ValidaNumero($scope.capituloL.L05_1);
+                //$scope.ValidaNumero($scope.capituloL.L05_1A);
+                $scope.ValidaNumero($scope.capituloL.L05_2);
+                //$scope.ValidaNumero($scope.capituloL.L05_2A);
+                $scope.ValidaNumero($scope.capituloL.L05_3);
+                $scope.ValidaNumero($scope.capituloL.L05_4);
+                $scope.ValidaNumero($scope.capituloL.L05_5);
+
+
+   
+            }
+            else {
+                $scope.capituloL.IdHogar = $scope.idHogar;
+                $scope.capituloL.IdIntegranteHogar = $scope.idIntegranteHogarSeleccionado;
+               
+            }
+
+            
+            for (var i = 0; i < $scope.listaOpciones.length; i++) {
+                if ($scope.listaOpciones[i].pregunta === 'L01')
+                    if ($scope.capituloE.E11 === 'E14:1' && $scope.listaOpciones[i].valorOpcion !== 'L01:2')
+                        $scope.listaOpcionesL1.push($scope.listaOpciones[i]);
+                    else if ($scope.capituloE.E11 !== 'E14:1')
+                        $scope.listaOpcionesL1.push($scope.listaOpciones[i]);
+                //else if ($scope.listaOpciones[i].valorOpcion === 'L01:2' && $scope.capituloK.K14 != 'K14:3') {
+                //    $scope.listaOpcionesL1.push($scope.listaOpciones[i]);
+                //}
+
+            }
+            //if ($scope.capituloK.K14 == 'K14:3') {
+            //    $scope.capituloL.L01 = 'L01:1';
+            //}
+
+
+            
+            $timeout(() => $scope.$apply(), 500);
+        });
+    }
+
+    $scope.GrabarCapituloL = function () {
+        $scope.capituloL.idEstado = "16";
+        if ($scope.capituloE.E11 != 'E14:1') {
+            $scope.capituloL.L05_1 = 'L05_1:99';
+            $scope.capituloL.L05_1A = '99';
+            $scope.capituloL.L05_2 = 'L05_2:99';
+            $scope.capituloL.L05_2A = '99';
+            $scope.capituloL.L05_3 = 'L05_3:99';
+            $scope.capituloL.L05_4 = 'L05_4:99';
+            $scope.capituloL.L05_5 = 'L05_5:99';
+        }
+        if ($scope.capituloL.L01 == 'L01:2') {
+            $scope.capituloL.L02 = 'L02:99';
+            $scope.capituloL.L02_1 = 'L02_1:99';
+            $scope.capituloL.L02_2 = 'L02_2:99';
+            $scope.capituloL.L02_3 = 'L02_3:99';
+        }
+
+        if ($scope.capituloL.L03 == 'L03:2') {
+            $scope.capituloL.L04_1 = 'L04_1:99';
+            $scope.capituloL.L04_2 = 'L04_2:99';
+            $scope.capituloL.L04_3 = 'L04_3:99';
+            $scope.capituloL.L04_4 = 'L04_4:99';
+            $scope.capituloL.L04_5 = 'L04_5:99';
+            $scope.capituloL.L04_6 = 'L04_6:99';
+        }
+        if ($scope.capituloL.L02_1 == 'L02_1:99') {
+            $scope.capituloL.L02_1A = '99';
+        } else if ($scope.capituloL.L02_1 == 'L02_1:2' || $scope.capituloL.L02_1 == 'L02_1:9') {
+            $scope.capituloL.L02_1 = '0';
+        }
+        if ($scope.capituloL.L02_2 == 'L02_2:99') {
+            $scope.capituloL.L02_2A = '99';
+        } else if ($scope.capituloL.L02_2 == 'L02_2:2' || $scope.capituloL.L02_2 == 'L02_2:9') {
+            $scope.capituloL.L02_2A = '0';
+        }
+        if ($scope.capituloL.L02_3 == 'L02_3:99') {
+            $scope.capituloL.L02_3A = '99';
+        } else if ($scope.capituloL.L02_3 == 'L02_3:2' || $scope.capituloL.L02_3 == 'L02_3:9') {
+            $scope.capituloL.L02_3A = '0';
+        }
+        if ($scope.capituloL.L04_1 == 'L04_1:99') {
+            $scope.capituloL.L04_1A = '99';
+        } else if ($scope.capituloL.L04_1 == 'L04_1:2' || $scope.capituloL.L04_1 == 'L04_1:9') {
+            $scope.capituloL.L04_1A = '0';
+        }
+
+        if ($scope.capituloL.L04_2 == 'L04_2:99') {
+            $scope.capituloL.L04_2A = '99';
+        } else if ($scope.capituloL.L04_2 == 'L04_2:2' || $scope.capituloL.L04_2 == 'L04_2:9') {
+            $scope.capituloL.L04_2A = '0';
+        }
+        if ($scope.capituloL.L04_3 == 'L04_3:99') {
+            $scope.capituloL.L04_3A = '99';
+        } else if ($scope.capituloL.L04_3 == 'L04_3:2' || $scope.capituloL.L04_3 == 'L04_3:9') {
+            $scope.capituloL.L04_3A = '0';
+        }
+        if ($scope.capituloL.L04_3 == 'L04_3:99') {
+            $scope.capituloL.L04_3A = '99';
+        } else if ($scope.capituloL.L04_3 == 'L04_3:2' || $scope.capituloL.L04_3 == 'L04_3:9') {
+            $scope.capituloL.L04_3A = '0';
+        }
+        if ($scope.capituloL.L04_4 == 'L04_4:99') {
+            $scope.capituloL.L04_4A = '99';
+        } else if ($scope.capituloL.L04_4 == 'L04_4:2' || $scope.capituloL.L04_4 == 'L04_4:9') {
+            $scope.capituloL.L04_4A = '0';
+        }
+        if ($scope.capituloL.L04_5 == 'L04_5:99') {
+            $scope.capituloL.L04_5A = '99';
+        } else if ($scope.capituloL.L04_5 == 'L04_5:2' || $scope.capituloL.L04_5 == 'L04_5:9') {
+            $scope.capituloL.L04_5A = '0';
+        }
+        if ($scope.capituloL.L04_6 == 'L04_6:99') {
+            $scope.capituloL.L04_6A = '99';
+        } else if ($scope.capituloL.L04_6 == 'L04_6:2' || $scope.capituloL.L04_6 == 'L04_6:9') {
+            $scope.capituloL.L04_6A = '0';
+        }
+
+
+        if ($scope.capituloL.L05_1 == 'L05_1:1') {
+            $scope.capituloL.L05_1A = '0';
+        }
+        if ($scope.capituloL.L05_2 == 'L05_2:1') {
+            $scope.capituloL.L05_2A = '0';
+        }
+        DataEncuestaSvr.GrabarCapituloL($scope.capituloL);
+
+        DatabaseSvr.ObtenerResultadoSQL('SELECT * FROM TLCARCAPITULOL', []).then(function (value) {
+            console.log(value);
+        });
+
+        $location.path('/CapituloL');
+        $timeout(() => $scope.$apply(), 500);
+    }
+
+    $scope.ValidaRespuesta = function (pregunta) {
+        
+
+        switch (pregunta) {
+            case 'L05':
+
+                if ($scope.capituloL.L05 == 'L05:2' || $scope.capituloL.L05 == 'L05:3') {
+                    $scope.malla.L05V = true;
+                    $scope.capituloL.L05V = 0;
+                }
+                else {
+                    $scope.malla.L05V = false;
+                    
+                }
+                break;
+            case 'L05_1':
+
+                if ($scope.capituloL.L05_1 != 'L05_1:1') {
+                    $scope.malla.L05_1A = true;
+                    $scope.capituloL.L05_1A = 0;
+                }
+                else {
+                    $scope.malla.L05_1A = false;
+
+                }
+                break;
+            case 'L05_2':
+
+                if ($scope.capituloL.L05_2 != 'L05_2:1') {
+                    $scope.malla.L05_2A = true;
+                    $scope.capituloL.L05_2A = 0;
+                }
+                else {
+                    $scope.malla.L05_2A = false;
+
+                }
+                break;
+            case 'L02_1':
+                if ($scope.capituloL.L02_1 == 'L02_1:2' || $scope.capituloL.L02_1 == 'L02_1:3') {
+                    $scope.malla.L02_1A = true;
+                    $scope.capituloL.L02_1A = 0;
+                }
+                else {
+                    $scope.malla.L02_1A = false;
+                    
+                }
+                break;
+            case 'L02_2':
+                if ($scope.capituloL.L02_2 == 'L02_2:2' || $scope.capituloL.L02_2 == 'L02_2:3') {
+                    $scope.malla.L02_2A = true;
+                    $scope.capituloL.L02_2A = 0;
+                }
+                else {
+                    $scope.malla.L02_2A = false;
+                   
+                }
+                break;
+
+            case 'L04_1':
+                if ($scope.capituloL.L04_1 == 'L04_1:2' || $scope.capituloL.L04_1 == 'L04_1:3') {
+                    $scope.malla.L04_1A = true;
+                    $scope.capituloL.L04_1A = 0;
+                }
+                else {
+                    $scope.malla.L04_1A = false;
+                   
+                }
+                break
+            case 'L04_2':
+                if ($scope.capituloL.L04_2 == 'L04_2:2' || $scope.capituloL.L04_2 == 'L04_2:3') {
+                    $scope.malla.L04_2A = true;
+                    $scope.capituloL.L04_2A = 0;
+                }
+                else {
+                    $scope.malla.L04_2A = false;
+                    
+                }
+                break;
+            case 'L04_3':
+                if ($scope.capituloL.L04_3 == 'L04_3:2' || $scope.capituloL.L04_3 == 'L04_3:3') {
+                    $scope.malla.L04_3A = true;
+                    $scope.capituloL.L04_3A = 0;
+                }
+                else {
+                    $scope.malla.L04_3A = false;
+                    
+                }
+                break;
+            case 'L04_4':
+                if ($scope.capituloL.L04_4 == 'L04_4:2' || $scope.capituloL.L04_4 == 'L04_4:3') {
+                    $scope.malla.L04_4A = true;
+                    $scope.capituloL.L04_4A = 0;
+                }
+                else {
+                    $scope.malla.L04_4A = false;
+                    
+                }
+                break;
+            case 'L04_5':
+                if ($scope.capituloL.L04_5 == 'L04_5:2' || $scope.capituloL.L04_5 == 'L04_5:3') {
+                    $scope.malla.L04_5A = true;
+                    $scope.capituloL.L04_5A = 0;
+                }
+                else {
+                    $scope.malla.L04_5A = false;
+                    
+                }
+                break;
+            case 'L04_6':
+                if ($scope.capituloL.L04_6 == 'L04_6:2' || $scope.capituloL.L04_6 == 'L04_6:3') {
+                    $scope.malla.L04_6A = true;
+                    $scope.capituloL.L04_6A = 0;
+                }
+                else {
+                    $scope.malla.L04_6A = false;
+                    
+                }
+                break;
+
+
+            default:
+                break;
+        }
+
+
+
+    }
+    $scope.ValidaN = function (numeral) {
+        console.log(numeral);
+        var respuesta = $scope.capituloL[numeral];
+        if (respuesta!=undefined)
+        {
+            if (respuesta.length > 0)
+            {
+                var prefijo = respuesta.substring(0, respuesta.length - 1);
+                var sufijo = respuesta.substring(respuesta.length - 1, respuesta.length);
+                var esletra;
+
+                if (isNaN(respuesta)) {
+                    console.log("entro inan");
+                    $scope.capituloL[numeral] = prefijo;
+                    if ($scope.capituloL[numeral].length == 0) {
+                        $scope.malla[numeral] = false;
+                    }
+                }
+                else {
+                    console.log("entro numero");
+                    while (!($scope.capituloL[numeral] >= 0 && $scope.capituloL[numeral] < 30000000)) {
+                        $scope.capituloL[numeral] = $scope.capituloL[numeral].substring(0, $scope.capituloL[numeral].length - 1);
+                    }
+
+                    if ($scope.capituloL[numeral] >= 0 && $scope.capituloL[numeral] < 30000000) {
+                        $scope.malla[numeral] = true;
+                    }
+                    else {
+                        $scope.malla[numeral] = false;
+                    }
+                }
+            }
+            else
+            {
+                $scope.malla[numeral] = false;
+            }
+
+        }
+        else
+        {
+            $scope.malla[numeral] = false;
+        }
+
+
+
+    }
+
+    $scope.ValidaN1 = function (numeral) {
+        console.log(numeral);
+        var respuesta = $scope.capituloL[numeral];
+        if (respuesta != undefined) {
+            if (respuesta.length > 0) {
+                var prefijo = respuesta.substring(0, respuesta.length - 1);
+                var sufijo = respuesta.substring(respuesta.length - 1, respuesta.length);
+                var esletra;
+
+                if (isNaN(respuesta)) {
+                    console.log("entro inan");
+                    $scope.capituloL[numeral] = prefijo;
+                    if ($scope.capituloL[numeral].length == 0) {
+                        $scope.malla[numeral] = false;
+                    }
+                }
+                else {
+                    console.log("entro numero");
+                    while (!($scope.capituloL[numeral] >= 0 && $scope.capituloL[numeral] < 30000000)) {
+                        $scope.capituloL[numeral] = $scope.capituloL[numeral].substring(0, $scope.capituloL[numeral].length - 1);
+                    }
+
+                    if ($scope.capituloL[numeral] >= 100 && $scope.capituloL[numeral] < 30000000) {
+                        $scope.malla[numeral] = true;
+                    }
+                    else {
+                        $scope.malla[numeral] = false;
+                    }
+                }
+            }
+            else {
+                $scope.malla[numeral] = false;
+            }
+
+        }
+        else {
+            $scope.malla[numeral] = false;
+        }
+
+
+
+    }
+
+    $scope.ValidaNumero = function (respuesta) {
+        var prefijorespuesta = respuesta.substring(0, respuesta.length - 1 );
+        var sufijorespuesta = respuesta.substring(respuesta.length - 1, respuesta.length);
+
+        
+        if (sufijorespuesta == '1')
+        {
+            switch (prefijorespuesta) {
+                case 'L05':
+
+                    if ($scope.capituloL.L05V === undefined || $scope.capituloL.L05V === undefined || $scope.capituloL.L05V === '' || $scope.capituloL.L05V === '0')
+                        $scope.malla.L05V = false;
+                    else
+                        $scope.malla.L05V = true;
+                    break;
+                case 'L06':
+                    if ($scope.capituloL.L06V === undefined || $scope.capituloL.L06V === '' || $scope.capituloL.L06V === '0')
+                        $scope.malla.L06V = false;
+                    else
+                        $scope.malla.L06V = true;
+                    break;
+                case 'L07':
+                    if ($scope.capituloL.L07VA === undefined || $scope.capituloL.L07VA === '' || $scope.capituloL.L07VA === '0')
+                        $scope.malla.L07VA = false;
+                    else
+                        $scope.malla.L07VA = true;
+                    break;
+                case 'L08A':
+                    if ($scope.capituloL.L08AV === undefined || $scope.capituloL.L08AV === '' || $scope.capituloL.L08AV === '0')
+                        $scope.malla.L08AV = false;
+                    else
+                        $scope.malla.L08AV = true;
+                    break;
+                case 'L08B':
+                    if ($scope.capituloL.L08BV === undefined || $scope.capituloL.L08BV === '' || $scope.capituloL.L08BV === '0')
+                        $scope.malla.L08BV = false;
+                    else
+                        $scope.malla.L08BV = true;
+                    break;
+                case 'L08C':
+                    if ($scope.capituloL.L08CV === undefined || $scope.capituloL.L08CV === '' || $scope.capituloL.L08CV === '0')
+                        $scope.malla.L08CV = false;
+                    else
+                        $scope.malla.L08CV = true;
+                    break;
+                case 'L08D':
+                    if ($scope.capituloL.L08DV === undefined || $scope.capituloL.L08DV === '' || $scope.capituloL.L08DV === '0')
+                        $scope.malla.L08DV = false;
+                    else
+                        $scope.malla.L08DV = true;
+                    break;
+                case 'L08E':
+                    if ($scope.capituloL.L08EV === undefined || $scope.capituloL.L08EV === '' || $scope.capituloL.L08EV === '0')
+                        $scope.malla.L08EV = false;
+                    else
+                        $scope.malla.L08EV = true;
+                    break;
+                case 'L08F1':
+                    if ($scope.capituloL.L08F1V === undefined || $scope.capituloL.L08F1V === '' || $scope.capituloL.L08F1V === '0')
+                        $scope.malla.L08F1V = false;
+                    else
+                        $scope.malla.L08F1V = true;
+                    break;
+                case 'L08F2':
+                    if ($scope.capituloL.L08F2V === undefined || $scope.capituloL.L08F2V === '' || $scope.capituloL.L08F2V === '0')
+                        $scope.malla.L08F2V = false;
+                    else
+                        $scope.malla.L08F2V = true;
+                    break;
+                case 'L08F3':
+                    if ($scope.capituloL.L08F3V === undefined || $scope.capituloL.L08F3V === '' || $scope.capituloL.L08F3V === '0')
+                        $scope.malla.L08F3V = false;
+                    else
+                        $scope.malla.L08F3V = true;
+                    break;
+                case 'L09A':
+                    if ($scope.capituloL.L09AV === undefined || $scope.capituloL.L09AV === '' || $scope.capituloL.L09AV === '0')
+                        $scope.malla.L09AV = false;
+                    else
+                        $scope.malla.L09AV = true;
+                    break;
+
+                case 'L09B':
+                    if ($scope.capituloL.L09BV === undefined || $scope.capituloL.L09BV === '' || $scope.capituloL.L09BV === '0')
+                        $scope.malla.L09BV = false;
+                    else
+                        $scope.malla.L09BV = true;
+                    break;
+                case 'L09C':
+                    if ($scope.capituloL.L09CV === undefined || $scope.capituloL.L09CV === '' || $scope.capituloL.L09CV === '0')
+                        $scope.malla.L09CV = false;
+                    else
+                        $scope.malla.L09CV = true;
+                    break;
+                case 'L09D':
+                    if ($scope.capituloL.L09DV === undefined || $scope.capituloL.L09DV === '' || $scope.capituloL.L09DV === '0')
+                        $scope.malla.L09DV = false;
+                    else
+                        $scope.malla.L09DV = true;
+                    break;
+                case 'L09E':
+                    if ($scope.capituloL.L09EV === undefined || $scope.capituloL.L09EV === '' || $scope.capituloL.L09EV === '0')
+                        $scope.malla.L09EV = false;
+                    else
+                        $scope.malla.L09EV = true;
+                    break;
+                case 'L09F':
+                    if ($scope.capituloL.L09FV === undefined || $scope.capituloL.L09FV === '' || $scope.capituloL.L09FV === '0')
+                        $scope.malla.L09FV = false;
+                    else
+                        $scope.malla.L09FV = true;
+                    break;
+                case 'L09G':
+                    if ($scope.capituloL.L09GV === undefined || $scope.capituloL.L09GV === '' || $scope.capituloL.L09GV === '0')
+                        $scope.malla.L09GV = false;
+                    else
+                        $scope.malla.L09GV = true;
+                    break;
+                case 'L09H':
+                    if ($scope.capituloL.L09HV === undefined || $scope.capituloL.L09HV === '' || $scope.capituloL.L09HV === '0')
+                        $scope.malla.L09HV = false;
+                    else
+                        $scope.malla.L09HV = true;
+                    break;
+                case 'L02_1':
+                    if ($scope.capituloL.L02_1A === undefined || $scope.capituloL.L02_1A === '' )
+                        $scope.malla.L02_1A = false;
+                    else
+                        $scope.malla.L02_1A = true;
+                    break;
+                case 'L02_2':
+                    if ($scope.capituloL.L02_2A === undefined || $scope.capituloL.L02_2A === '' )
+                        $scope.malla.L02_2A = false;
+                    else
+                        $scope.malla.L02_2A = true;
+                    break;
+                case 'L02_3':
+                    if ($scope.capituloL.L02_3A === undefined || $scope.capituloL.L02_3A === '' )
+                        $scope.malla.L02_3A = false;
+                    else
+                        $scope.malla.L02_3A = true;
+                    break;
+
+                case 'L04_1':
+                    if ($scope.capituloL.L04_1A === undefined || $scope.capituloL.L04_1A === '' )
+                        $scope.malla.L04_1A = false;
+                    else
+                        $scope.malla.L04_1A = true;
+                    break
+                case 'L04_2':
+                    if ($scope.capituloL.L04_2A === undefined || $scope.capituloL.L04_2A === '' )
+                        $scope.malla.L04_2A = false;
+                    else
+                        $scope.malla.L04_2A = true;
+                    break;
+                case 'L04_3':
+                    if ($scope.capituloL.L04_3A === undefined || $scope.capituloL.L04_3A === '')
+                        $scope.malla.L04_3A = false;
+                    else
+                        $scope.malla.L04_3A = true;
+                    break;
+                case 'L04_4':
+                    if ($scope.capituloL.L04_4A === undefined || $scope.capituloL.L04_4A === '')
+                        $scope.malla.L04_4A = false;
+                    else
+                        $scope.malla.L04_4A = true;
+                    break;
+                case 'L04_5':
+                    if ($scope.capituloL.L04_5A === undefined || $scope.capituloL.L04_5A === '' )
+                        $scope.malla.L04_5A = false;
+                    else
+                        $scope.malla.L04_5A = true;
+                    break;
+                case 'L04_6':
+                    if ($scope.capituloL.L04_6A === undefined || $scope.capituloL.L04_6A === '' )
+                        $scope.malla.L04_6A = false;
+                    else
+                        $scope.malla.L04_6A = true;
+                    break;
+                case 'L05_1':
+                    if ($scope.capituloL.L05_1A === undefined || $scope.capituloL.L05_1A === '')
+                        $scope.malla.L05_1A = false;
+                    else
+                        $scope.malla.L05_1A = true;
+                    break;
+                case 'L05_2':
+                    if ($scope.capituloL.L05_2A === undefined || $scope.capituloL.L05_2A === '')
+                        $scope.malla.L05_2A = false;
+                    else
+                        $scope.malla.L05_2A = true;
+                    break;
+
+
+                default:
+                    break;
+            }
+        }
+       
+    }
+
+    $scope.Cancelar = function () {
+
+        $location.path('/CapituloL');
+        $timeout(() => $scope.$apply(), 500);
+    }
+    $scope.eliminarrepetidos = function (errors) {
+        return UtilidadesSvr.eliminarrepetidos(errors);
+    }
+});
